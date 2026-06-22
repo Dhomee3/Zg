@@ -1,69 +1,78 @@
-require("dotenv").config();
 const { Client } = require("discord.js-selfbot-v13");
-const config = require("./config.json");
+const express = require("express");
 
-const TOKEN = process.env.DISCORD_TOKEN;
-if (!TOKEN) {
-  console.error("❌ الخطأ: ضع الـ DISCORD_TOKEN في الـ Secrets");
+// ========== الإعدادات ==========
+const config = {
+  token: process.env.DISCORD_TOKEN,
+
+  // الستاتس: online | idle | dnd | invisible
+  status: process.env.STATUS || "idle",
+
+  // اسم السترييم (اللعبة أو البرنامج)
+  streamName: process.env.STREAM_NAME || " .",
+
+  // رابط تويتش (مطلوب للستريم)
+  streamUrl: process.env.STREAM_URL || "https://www.twitch.tv/x20",
+
+  // الوصف (السطر الأول)
+  details: process.env.STREAM_DETAILS || ".",
+
+  // الحالة (السطر الثاني)
+  state: process.env.STREAM_STATE || "",
+
+  // الصورة الكبيرة (رابط مباشر)
+  largeImage: process.env.LARGE_IMAGE || "",
+
+  // نص الصورة الكبيرة
+  largeText: process.env.LARGE_TEXT || "",
+
+  // الصورة الصغيرة (رابط مباشر)
+  smallImage: process.env.SMALL_IMAGE || "",
+
+  // نص الصورة الصغيرة
+  smallText: process.env.SMALL_TEXT || "",
+};
+// ================================
+
+// سيرفر صغير للـ 24/7 على Render
+const app = express();
+app.get("/", (_, res) => res.send("✅ البوت شغال"));
+app.listen(process.env.PORT || 3000, () =>
+  console.log("🌐 Health server running")
+);
+
+// البوت
+if (!config.token) {
+  console.error("❌ أضف DISCORD_TOKEN في المتغيرات البيئية");
   process.exit(1);
 }
 
 const client = new Client({ checkUpdate: false });
 
-async function setStreamStatus() {
-  const {
-    name,
-    url,
-    details,
-    state,
-    largeImageUrl,
-    largeImageText,
-    smallImageUrl,
-    smallImageText,
-    applicationId,
-  } = config.streaming;
-
-  const assets = {};
-  if (largeImageUrl) {
-    assets.large_image = largeImageUrl;
-    if (largeImageText) assets.large_text = largeImageText;
-  }
-  if (smallImageUrl) {
-    assets.small_image = smallImageUrl;
-    if (smallImageText) assets.small_text = smallImageText;
-  }
-
-  const activity = {
-    name: name,
-    type: "STREAMING",
-    url: url,
-    timestamps: { start: Date.now() },
-  };
-
-  if (details) activity.details = details;
-  if (state) activity.state = state;
-  if (Object.keys(assets).length > 0) activity.assets = assets;
-  if (applicationId) activity.application_id = applicationId;
-
-  await client.user.setActivity(activity);
-  await client.user.setStatus("online");
-}
-
 client.on("ready", async () => {
-  console.log(`✅ تم تسجيل الدخول كـ: ${client.user.tag}`);
+  console.log(`✅ تسجيل دخول: ${client.user.tag}`);
 
-  await setStreamStatus();
-  console.log(`🎮 تم تفعيل حالة الستريم: ${config.streaming.name}`);
+  await client.user.setPresence({
+    status: config.status,
+    activities: [
+      {
+        name: config.streamName,
+        type: "STREAMING",
+        url: config.streamUrl,
+        details: config.details,
+        state: config.state,
+        assets: {
+          large_image: config.largeImage,
+          large_text: config.largeText,
+          small_image: config.smallImage,
+          small_text: config.smallText,
+        },
+      },
+    ],
+  });
 
-  // refresh كل دقيقتين لضمان بقاء الحالة
-  setInterval(async () => {
-    await setStreamStatus();
-    console.log("🔄 تم تجديد الحالة");
-  }, 2 * 60 * 1000);
+  console.log(`🎮 Streaming: ${config.streamName}`);
 });
 
-client.on("error", (err) => {
-  console.error("❌ خطأ:", err.message);
-});
-
-client.login(TOKEN);
+client.on("error", (e) => console.error("خطأ:", e.message));
+client.login(config.token);
