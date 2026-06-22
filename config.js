@@ -3,7 +3,7 @@ module.exports = {
   status: "idle",
 
   // اسم اللعبة أو البرنامج
-  streamName: " ",
+  streamName: ".",
 
   // رابط تويتش (مطلوب للنوع Streaming)
   streamUrl: "https://www.twitch.tv/x20",
