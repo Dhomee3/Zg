@@ -1,14 +1,12 @@
 {
-  "name": "discord-stream-status",
+  "name": "discord-streaming-bot",
   "version": "1.0.0",
-  "description": "Discord selfbot - Custom Streaming Status",
   "main": "index.js",
   "scripts": {
     "start": "node index.js"
   },
   "dependencies": {
-    "debug": "^4.4.3",
-    "discord.js-selfbot-v13": "^3.4.1",
-    "dotenv": "^17.4.2"
+    "discord.js-selfbot-v13": "^3.4.3",
+    "express": "^4.18.2"
   }
 }
